@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func main() {
 		panic(err)
 	}
 
-	println("Arquivo criado com sucesso com o valor da cotação: " + strings.TrimSpace(cotacao.Valor))
+	println("Arquivo criado com sucesso com o valor da cotação: " + cotacao.Valor)
 }
 
 func criaArquivo(cotacao *Cotacao) error {
@@ -42,7 +43,7 @@ func criaArquivo(cotacao *Cotacao) error {
 		return err
 	}
 
-	_, err = f.WriteString("Dólar: " + strings.TrimSpace(cotacao.Valor) + "\n")
+	_, err = f.WriteString("Dólar: " + cotacao.Valor + "\n")
 
 	if err != nil {
 		return err
@@ -66,7 +67,15 @@ func obterCotacao() (*Cotacao, error) {
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
+		if err == context.DeadlineExceeded {
+			log.Println("Request timed out")
+		}
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Erro ao obter cotação: %s", resp.Status)
+		return nil, errors.New("erro ao obter cotação: " + resp.Status)
 	}
 
 	defer resp.Body.Close()

@@ -17,7 +17,7 @@ type CotacaoResponse struct {
 }
 
 type Cotacao struct {
-	Valor float64 `json:"bid"`
+	Valor string `json:"bid"`
 }
 
 func main() {
@@ -63,14 +63,12 @@ func salvarCotacao(cotacao *Cotacao) error {
 	}
 
 	defer db.Close()
-	_, err = db.ExecContext(ctxDb, `CREATE TABLE IF NOT EXISTS cotacao (
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS cotacao (
 		valor TEXT
 	)`)
 
 	if err != nil {
-		if err == context.DeadlineExceeded {
-			log.Println("Request timed out")
-		}
 		return err
 	}
 
@@ -78,7 +76,7 @@ func salvarCotacao(cotacao *Cotacao) error {
 
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			log.Println("Request timed out")
+			log.Println("Request timed out on db insert")
 		}
 		return err
 	}
@@ -102,7 +100,7 @@ func buscarCotacaoApi() (*Cotacao, error) {
 
 	if err != nil {
 		if err == context.DeadlineExceeded {
-			log.Println("Request timed out")
+			log.Println("Request timed out on API")
 		}
 		return nil, err
 	}
